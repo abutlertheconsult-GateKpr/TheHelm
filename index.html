@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Helm</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#c15f3c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Helm">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{--bg:#f5f4ee;--ink:#141413;--mut:#6b6a63;--ac:#c15f3c;--acs:#f3e2d9;--card:#faf9f5;--line:#e3e0d3;--bad:#a32d2d;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+@media(prefers-color-scheme:dark){:root{--bg:#262624;--ink:#faf9f5;--mut:#a8a69c;--ac:#d97757;--acs:#3a2d27;--card:#30302e;--line:#454542;--bad:#f09595}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-size:17px;line-height:1.4;padding:env(safe-area-inset-top) 0 calc(76px + env(safe-area-inset-bottom))}
+main{max-width:640px;margin:0 auto;padding:14px}
+h1{font-size:26px;margin:6px 0 14px}
+button,input,select{font:inherit;color:inherit}
+button{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-height:44px}
+.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600}
+.d{color:var(--bad)}
+input[type=text],input[type=tel],input[type=email],select{width:100%;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-height:44px}
+.row{display:flex;gap:8px;align-items:center;margin-bottom:10px}.row>input{flex:1}
+.bar{display:flex;justify-content:space-between;align-items:center}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;padding:0 2px;border:0;border-radius:0;background:none;min-height:60px;color:var(--mut);font-size:12px}
+nav button.on{color:var(--ac);font-weight:700;box-shadow:inset 0 3px var(--ac)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.doc{position:relative;text-align:left;padding:16px 12px;min-height:92px;display:flex;flex-direction:column;justify-content:space-between;background:var(--card)}
+.doc b{font-size:16px;word-break:break-word}.doc small{color:var(--mut);font-size:13px}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--acs);color:var(--ac);width:max-content}
+.edit .doc{outline:2px dashed var(--line)}
+.doc{border:1px solid var(--line);border-radius:12px;cursor:pointer}
+.acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.mini{padding:6px 10px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:var(--bg)}.mini.bad{color:var(--bad)}
+.doc input[type=text]{margin:6px 0}
+textarea{width:100%;min-height:96px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;resize:vertical;margin:8px 0}
+.hd{display:flex;gap:8px;align-items:center}.hd button{min-height:40px;padding:4px 10px}
+.x{position:absolute;top:4px;right:4px;min-height:34px;padding:2px 10px;color:var(--bad)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:14px}
+.card h2{font-size:18px;margin:0}.card .cnt{color:var(--mut);font-size:14px}
+.it{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)}
+.it input[type=checkbox]{width:24px;height:24px;accent-color:var(--ac);flex:none}
+.it span{flex:1;word-break:break-word}.it.done span{text-decoration:line-through;color:var(--mut)}
+.it button{min-height:36px;padding:2px 10px}
+.note{display:block;width:100%;text-align:left;margin-bottom:10px}.note small{display:block;color:var(--mut)}
+.tb{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0;position:sticky;top:0;background:var(--bg);padding:6px 0;z-index:2}
+.tb button{min-width:44px;padding:6px 10px}.tb select{width:auto}
+#ed{min-height:46vh;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;outline:none}
+ button:disabled{opacity:.4}
+.row>select{flex:1;width:auto}a.doc{text-decoration:none;color:var(--ink)}
+.mut{color:var(--mut)}.empty{color:var(--mut);padding:20px 0;text-align:center}
+.fi{position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none}
+a.bt,label.bt{color:var(--ink);text-decoration:none;display:flex;align-items:center;justify-content:center;text-align:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-height:44px;cursor:pointer}
+a.bt.p,label.bt.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600}
+#toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;display:none;z-index:30}
+#vw{position:fixed;inset:0;background:var(--bg);z-index:20;display:none;flex-direction:column;padding-top:env(safe-area-inset-top)}
+#vw.on{display:flex}
+#vh{display:flex;gap:8px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--card)}
+#vh b{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#vtool{display:none;position:relative;background:var(--bg);border-bottom:1px solid var(--line);padding:6px 10px}#vtool.on{display:block}
+#bmp{position:absolute;top:100%;left:10px;right:10px;margin-top:4px;max-height:55vh;overflow:auto;z-index:6;box-shadow:0 8px 20px #0006}
+#vb{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:10px calc(10px + env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) 10px;touch-action:pan-x pan-y pinch-zoom}
+.paper{background:#fff;color:#000;border-radius:8px;padding:16px;overflow-x:auto;line-height:1.5}
+.paper img{max-width:100%;height:auto}.paper a{color:#0b57d0}
+.paper table{border-collapse:collapse;font-size:14px}.paper td,.paper th{border:1px solid #ccc;padding:4px 8px;white-space:pre-wrap;vertical-align:top}
+#pgs{width:max-content;min-width:100%}.pg{background:#fff;margin:0 auto 10px;display:block;box-shadow:0 1px 4px #0003;position:relative;scroll-margin-top:8px}
+.bm{position:absolute;top:6px;left:6px;z-index:2;min-height:36px;padding:2px 12px;background:var(--card);color:var(--ink);box-shadow:0 1px 4px #0004}
+.sheets{display:flex;gap:6px;overflow-x:auto;margin-bottom:8px}.sheets button{white-space:nowrap;min-height:38px}.sheets .on{background:var(--ac);color:#fff;border-color:var(--ac)}
+#ns{position:fixed;left:0;right:0;bottom:0;z-index:25;display:none;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--bg);border-top:1px solid var(--line);box-shadow:0 -8px 20px #0005}#ns.on{display:block}
+#nsa{width:100%;min-height:120px;margin-top:6px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;resize:vertical}
+.nbw{position:absolute;z-index:1;overflow:hidden;cursor:pointer;border:1px dashed #b7a64a;background:rgba(255,238,140,.3);border-radius:3px;box-sizing:border-box}
+.nbw .nt{color:#0b3d91;font-size:calc(var(--s,1)*10.5px);line-height:1.25;padding:calc(var(--s,1)*3px) calc(var(--s,1)*4px);white-space:pre-wrap;word-break:break-word;font-family:system-ui,sans-serif}
+.nbw .nt.e{color:#8a7a1d;opacity:.75}.nbw .nt.e::before{content:'Tap to add a note'}
+.fr{background:rgba(255,238,140,.75);overflow:visible}.fr .nt{overflow:hidden;height:100%}
+.fx{position:absolute;top:-13px;right:-8px;min-height:28px;min-width:28px;padding:0;border-radius:14px;background:var(--card);color:var(--bad)}
+#print{display:none}
+@media print{body>*:not(#print){display:none!important}#print{display:block;color:#000;background:#fff;font-size:14pt}body{padding:0;background:#fff}}
+</style></head><body>
+<main id="app"></main>
+<nav id="nav"></nav>
+<div id="vw"><div id="vh"><button id="vx">Close</button><b id="vt"></b><button id="vo">Open outside</button></div><div id="vtool"></div><div id="vb"></div></div>
+<div id="ns"><b id="nst"></b><textarea id="nsa" placeholder="Type your note"></textarea><div class="row" style="margin:8px 0 0"><button class="p" id="nsd" style="flex:1">Done</button></div></div>
+<div id="toast"></div>
+<div id="print"></div>
+<input type="file" id="fp" class="fi" multiple>
+<input type="file" id="imp" class="fi">
+<input type="file" id="rf" class="fi">
+<script>
+const $=s=>document.querySelector(s),uid=()=>Math.random().toString(36).slice(2,10);
+let D={docs:[],lists:[],notes:[],people:[],apps:[]};
+try{D=Object.assign(D,JSON.parse(localStorage.getItem('ov')||'{}'))}catch(e){}
+const KEYS=['docs','lists','notes','people','apps'],H={},last={};let lastTyp=null,lastT=0;
+const resetHist=()=>KEYS.forEach(k=>{H[k]={u:[],r:[]};last[k]=JSON.stringify(D[k])});resetHist();
+const refreshHB=()=>{document.querySelectorAll('[data-un]').forEach(b=>b.disabled=!H[b.dataset.un].u.length);document.querySelectorAll('[data-re]').forEach(b=>b.disabled=!H[b.dataset.re].r.length)};
+const save=typing=>{const now=Date.now();let typed=null;
+ KEYS.forEach(k=>{const j=JSON.stringify(D[k]);if(j===last[k])return;
+  if(!(typing&&lastTyp===k&&now-lastT<2000)){H[k].u.push(last[k]);if(H[k].u.length>100)H[k].u.shift()}
+  H[k].r=[];last[k]=j;if(typing)typed=k});
+ if(typed){lastTyp=typed;lastT=now}else lastTyp=null;
+ localStorage.setItem('ov',JSON.stringify(D));refreshHB()};
+async function hist(k,dir){const h=H[k],from=dir<0?h.u:h.r,to=dir<0?h.r:h.u;
+ if(!from.length)return toast(dir<0?'Nothing to undo':'Nothing to redo');
+ to.push(last[k]);const j=from.pop();D[k]=JSON.parse(j);last[k]=j;lastTyp=null;localStorage.setItem('ov',JSON.stringify(D));
+ if(k=='docs'){renId=null;await loadUrls()}
+ edL=null;edI=null;pf=null;af=null;render();toast(dir<0?'Undone':'Redone')}
+const hb=k=>`<div class="row"><button data-un="${k}" style="flex:1" ${H[k].u.length?'':'disabled'}>\u21B6 Undo</button><button data-re="${k}" style="flex:1" ${H[k].r.length?'':'disabled'}>\u21B7 Redo</button></div>`;
+document.addEventListener('click',e=>{const b=e.target.closest('[data-un],[data-re]');if(!b||b.disabled)return;if(b.dataset.un)hist(b.dataset.un,-1);else hist(b.dataset.re,1)});
+let tab='docs',editMode=false,openNote=null;const urls={};
+const db=new Promise((ok,no)=>{const r=indexedDB.open('ov',1);r.onupgradeneeded=()=>r.result.createObjectStore('f');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)});
+const idb=async(m,k,v)=>{const d=await db;return new Promise((ok,no)=>{const s=d.transaction('f',m=='get'||m=='keys'?'readonly':'readwrite').objectStore('f');const q=m=='put'?s.put(v,k):m=='get'?s.get(k):m=='keys'?s.getAllKeys():s.delete(k);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})};
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display='none',2200)}
+async function loadUrls(){for(const d of D.docs){if(urls[d.id])continue;try{const b=await idb('get',d.id);if(b)urls[d.id]=URL.createObjectURL(b)}catch(e){}}}
+const ext=n=>(n.split('.').pop()||'').toLowerCase();
+function openDoc(d){const u=urls[d.id];if(!u)return toast('File not found. Re-attach it.');const a=document.createElement('a');a.href=u;if(ext(d.fname)=='pdf')a.target='_blank';else a.download=d.fname;document.body.appendChild(a);a.click();a.remove()}
+
+function render(){
+ $('#nav').innerHTML=[['docs','Docs'],['lists','Lists'],['notes','Notes'],['people','People'],['apps','Apps'],['set','Settings']].map(([k,l])=>`<button class="${tab==k?'on':''}" data-t="${k}">${l}</button>`).join('');
+ $('#nav').onclick=e=>{const t=e.target.dataset.t;if(t){tab=t;openNote=null;render()}};
+ const A=$('#app');A.onclick=A.onchange=A.oninput=A.onkeydown=null;
+ ({docs:rDocs,lists:rLists,notes:rNotes,people:rPeople,apps:rApps,set:rSet})[tab]();
+}
+const LIBS={
+ pdf:['https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js','https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js'],
+ wk:['https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js','https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js'],
+ docx:['https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js','https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js'],
+ pdflib:['https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js','https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js'],
+ xlsx:['https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js','https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js']};
+const loaded={};
+const loadJs=u=>new Promise((ok,no)=>{const e=document.createElement('script');e.src=u;e.crossOrigin='anonymous';e.onload=ok;e.onerror=()=>{e.remove();no()};document.head.appendChild(e)});
+const lib=k=>loaded[k]||(loaded[k]=(async()=>{for(const u of LIBS[k]){try{await loadJs(u);return}catch(e){}}delete loaded[k];throw new Error('offline')})());
+async function pdfWorker(){if(pdfWorker.u)return pdfWorker.u;for(const u of LIBS.wk){try{const r=await fetch(u);if(!r.ok)continue;return pdfWorker.u=URL.createObjectURL(new Blob([await r.text()],{type:'text/javascript'}))}catch(e){}}throw new Error('offline')}
+let vwOpen=false,curDoc=null;
+function closeV(){$('#ns').classList.remove('on');$('#vw').classList.remove('on');$('#vb').innerHTML='';$('#vb').onscroll=null;$('#vtool').className='';$('#vtool').innerHTML='';vwOpen=false;curDoc=null}
+$('#vx').onclick=()=>{if(vwOpen)history.back()};
+$('#vo').onclick=()=>{if(curDoc)openDoc(curDoc)};
+window.addEventListener('popstate',()=>{if(vwOpen)closeV()});
+async function viewDoc(d){
+ if(!urls[d.id])return toast('File not found. Re-attach it.');
+ $('#ns').classList.remove('on');$('#vtool').className='';$('#vtool').innerHTML='';$('#vb').onscroll=null;
+ curDoc=d;$('#vt').textContent=d.name;$('#vb').innerHTML='<p class="empty">Loading\u2026</p>';$('#vw').classList.add('on');
+ if(!vwOpen){vwOpen=true;history.pushState({v:1},'')}
+ const x=ext(d.fname);
+ try{
+  const blob=await idb('get',d.id);
+  if(x=='pdf')await showPdf(blob);
+  else if(x=='docx')await showDocx(blob);
+  else if(['xlsx','xls','csv'].includes(x))await showSheet(blob);
+  else if(['txt','md'].includes(x))$('#vb').innerHTML=`<div class="paper"><pre style="white-space:pre-wrap;margin:0;font:inherit">${esc(await blob.text())}</pre></div>`;
+  else if(['png','jpg','jpeg','gif','webp'].includes(x))$('#vb').innerHTML=`<div class="paper"><img src="${urls[d.id]}"></div>`;
+  else $('#vb').innerHTML='<p class="empty">This file type can\u2019t be shown inside Helm. Tap Open outside to open it in another app.</p>'
+ }catch(e){
+  $('#vb').innerHTML=e&&e.message=='offline'?'<p class="empty">The viewer needs internet the first time you open this kind of file. Connect once and it will work offline after that.</p>':'<p class="empty">Couldn\u2019t show this file inside Helm. Tap Open outside to open it in another app.</p>'}
+}
+async function showPdf(blob){
+ await lib('pdf');pdfjsLib.GlobalWorkerOptions.workerSrc=await pdfWorker();
+ const pdf=await pdfjsLib.getDocument({data:await blob.arrayBuffer()}).promise;
+ const vb=$('#vb'),vt=$('#vtool'),d=curDoc,N=pdf.numPages,bx={};let z=1,gen=0,panel=false,editP=null,addMode=false,cur=null,ready;
+ if((d.marks||[]).some(m=>typeof m=='number'))d.marks=d.marks.map(m=>typeof m=='number'?{p:m,n:''}:m);
+ vt.className='on';
+ vt.innerHTML=`<div class="bar" style="gap:8px"><span class="mut" id="pn">${N} page${N>1?'s':''}</span><span class="row" style="margin:0"><button id="zm">\u2212</button><button id="zp">+</button></span></div><div class="row" style="margin:8px 0 0"><button id="bmc" style="flex:1">Bookmarks</button><button id="adn" style="flex:1">+ Note</button><button id="exp" class="p" style="flex:1">Save PDF</button></div><div id="bmp" class="card" style="display:none"></div>`;
+ vb.innerHTML='<div id="pgs"></div>';
+ const wrap=$('#pgs'),bmp=$('#bmp'),marks=()=>d.marks||[],find=p=>marks().find(m=>m.p==p);
+ // Notes boxes: found from each "Notes:" label, using this form's fixed layout
+ const info=async i=>{if(!bx[i]){const pg=await pdf.getPage(i),v=pg.getViewport({scale:1}),tc=await pg.getTextContent(),boxes=[];
+  tc.items.forEach(it=>{if(it.str&&it.str.trim()=='Notes:'){const x=it.transform[4]+it.width+6.7;boxes.push({x,y:v.height-it.transform[5]-11.6,w:v.width-58.4-x,h:43.2})}});
+  bx[i]={W:v.width,H:v.height,boxes}}return bx[i]};
+ const pos=(l,t,w,h)=>`left:${l*100}%;top:${t*100}%;width:${w*100}%;height:${h*100}%`;
+ const nt=t=>`<div class="nt${t?'':' e'}">${esc(t||'')}</div>`;
+ const freeEl=n=>`<div class="nbw fr" data-nf="${n.id}" style="${pos(n.x/100,n.y/100,n.w/100,n.h/100)}">${nt(n.t)}<button class="fx" data-fx="${n.id}">\u2715</button></div>`;
+ const ovl=(i,f)=>{const a=d.ann||{};return f.boxes.map((b,k)=>`<div class="nbw" data-nk="${i}:${k}" style="${pos(b.x/f.W,b.y/f.H,b.w/f.W,b.h/f.H)}">${nt(a[i+':'+k])}</div>`).join('')+(d.free||[]).filter(n=>n.p==i).map(freeEl).join('')};
+ const getT=nb=>nb.dataset.nk?(d.ann||{})[nb.dataset.nk]||'':((d.free||[]).find(n=>n.id==nb.dataset.nf)||{}).t||'';
+ const setT=(nb,t)=>{if(nb.dataset.nk){const a=d.ann||(d.ann={});if(t)a[nb.dataset.nk]=t;else delete a[nb.dataset.nk];if(!Object.keys(a).length)delete d.ann}else{const n=(d.free||[]).find(x=>x.id==nb.dataset.nf);if(n)n.t=t}save(true)};
+ const sh=$('#ns'),ta=$('#nsa');
+ const openSheet=nb=>{cur=nb;$('#nst').textContent=nb.dataset.nk?'Notes, page '+nb.dataset.nk.split(':')[0]:'Note';ta.value=getT(nb);sh.classList.add('on');nb.scrollIntoView({block:'start'});ta.focus()};
+ ta.oninput=()=>{if(!cur)return;setT(cur,ta.value);const e=cur.querySelector('.nt');e.textContent=ta.value;e.classList.toggle('e',!ta.value)};
+ $('#nsd').onclick=()=>{sh.classList.remove('on');cur=null};
+ const renderPanel=()=>{bmp.style.display=panel?'block':'none';if(!panel)return;
+  const rows=marks().map(m=>editP==m.p?`<div class="it"><input type="text" id="bmi" value="${esc(m.n||'')}" placeholder="Name (optional)" style="flex:1"><button data-sv="${m.p}">Save</button></div>`:`<div class="it"><span data-go="${m.p}"><b>${esc(m.n||'Page '+m.p)}</b>${m.n?`<small class="mut" style="display:block">Page ${m.p}</small>`:''}</span><button data-rn="${m.p}">Rename</button><button class="d" data-rm="${m.p}">Remove</button></div>`).join('');
+  bmp.innerHTML=`<button class="p" data-add="1" style="width:100%;margin-bottom:8px">+ Bookmark current page</button>${rows||'<p class="mut" style="margin:0">No bookmarks yet. Tap the star on any page, or use the button above.</p>'}`;
+  const i=$('#bmi');if(i){i.focus();i.select()}};
+ const paint=()=>{wrap.querySelectorAll('.pg').forEach(h=>{const m=find(+h.dataset.n);h.firstChild.textContent=(m?'\u2605 ':'\u2606 ')+(m&&m.n?m.n:'Page '+h.dataset.n)});
+  $('#bmc').textContent='Bookmarks'+(marks().length?` (${marks().length})`:'')+' \u25BE';renderPanel()};
+ const curPage=()=>{const top=vb.getBoundingClientRect().top+60;for(const h of wrap.children){if(h.getBoundingClientRect().bottom>top)return +h.dataset.n}return N};
+ const toggle=p=>{const m=d.marks||(d.marks=[]),i=m.findIndex(x=>x.p==p);if(i<0){m.push({p,n:''});m.sort((a,b)=>a.p-b.p)}else m.splice(i,1);if(!m.length)delete d.marks;if(editP==p)editP=null;save();paint()};
+ const add=()=>{const p=curPage();if(!find(p)){const m=d.marks||(d.marks=[]);m.push({p,n:''});m.sort((a,b)=>a.p-b.p);save()}editP=p;paint()};
+ const saveName=p=>{const m=find(p),i=$('#bmi');if(m&&i){m.n=i.value.trim();save()}editP=null;paint()};
+ const closeP=()=>{if(editP!=null)saveName(editP);panel=false;renderPanel()};
+ const go=async p=>{await ready;closeP();const h=wrap.children[p-1];if(h)h.scrollIntoView({block:'start'})};
+ wrap.onclick=e=>{
+  const fx=e.target.closest('.fx');if(fx){const id=fx.dataset.fx;d.free=(d.free||[]).filter(n=>n.id!=id);if(!d.free.length)delete d.free;save();fx.parentNode.remove();if(cur&&cur.dataset.nf==id){sh.classList.remove('on');cur=null}return}
+  const nb=e.target.closest('.nbw');if(nb){openSheet(nb);return}
+  const b=e.target.closest('.bm');if(b){toggle(+b.parentNode.dataset.n);return}
+  const h=e.target.closest('.pg');
+  if(addMode&&h){const r=h.getBoundingClientRect(),n={id:uid(),p:+h.dataset.n,x:Math.min((e.clientX-r.left)/r.width*100,58),y:Math.min((e.clientY-r.top)/r.height*100,90),w:40,h:8,t:''};
+   (d.free||(d.free=[])).push(n);save();h.insertAdjacentHTML('beforeend',freeEl(n));addMode=false;$('#adn').classList.remove('p');openSheet(h.lastElementChild);return}
+  if(panel)closeP()};
+ bmp.onclick=e=>{const t=e.target.closest('[data-go],[data-rn],[data-rm],[data-add],[data-sv]');if(!t)return;const q=t.dataset;
+  if(q.go)go(+q.go);else if(q.rn){editP=+q.rn;renderPanel()}else if(q.rm)toggle(+q.rm);else if(q.add)add();else if(q.sv)saveName(+q.sv)};
+ bmp.onkeydown=e=>{if(e.key=='Enter'&&editP!=null)saveName(editP)};
+ $('#bmc').onclick=()=>{if(panel)closeP();else{panel=true;renderPanel()}};
+ $('#adn').onclick=()=>{addMode=!addMode;$('#adn').classList.toggle('p',addMode);if(addMode)toast('Tap the page where the note should go')};
+ $('#exp').onclick=async()=>{
+  const btn=$('#exp');btn.disabled=true;btn.textContent='Saving\u2026';
+  try{
+   await lib('pdflib');const {PDFDocument,StandardFonts,rgb}=PDFLib;
+   const doc=await PDFDocument.load(await blob.arrayBuffer()),font=await doc.embedFont(StandardFonts.Helvetica),pgs=doc.getPages();
+   const clean=t=>t.replace(/[^\n\x20-\x7E\xA0-\xFF]/g,'?');
+   const put=(pg,x,y,w,h,text)=>{const H=pg.getHeight();let size=10.5;
+    const wr=sz=>{const out=[];clean(text).split('\n').forEach(par=>{let line='';par.split(' ').forEach(wd=>{const t=line?line+' '+wd:wd;if(!line||font.widthOfTextAtSize(t,sz)<=w-8)line=t;else{out.push(line);line=wd}});out.push(line)});return out};
+    let lines=wr(size);while(lines.length*size*1.2>h-6&&size>5){size-=.5;lines=wr(size)}
+    lines.forEach((l,j)=>pg.drawText(l,{x:x+4,y:H-(y+3+size+j*size*1.2),size,font,color:rgb(.04,.24,.57)}))};
+   for(let i=1;i<=pgs.length;i++){const f=await info(i),pg=pgs[i-1];
+    f.boxes.forEach((b,k)=>{const t=(d.ann||{})[i+':'+k];if(t)put(pg,b.x,b.y,b.w,b.h,t)});
+    (d.free||[]).filter(n=>n.p==i&&n.t).forEach(n=>{const x=n.x/100*f.W,y=n.y/100*f.H,w=n.w/100*f.W,h=n.h/100*f.H;pg.drawRectangle({x,y:f.H-y-h,width:w,height:h,color:rgb(1,.96,.6),opacity:.8});put(pg,x,y,w,h,n.t)})}
+   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([await doc.save()],{type:'application/pdf'}));a.download=d.name+' (with notes).pdf';document.body.appendChild(a);a.click();a.remove();toast('PDF copy saved');
+  }catch(e){toast(e&&e.message=='offline'?'Needs internet the first time':'Could not save the PDF copy')}
+  btn.disabled=false;btn.textContent='Save PDF'};
+ vb.onscroll=()=>{cancelAnimationFrame(vb._r);vb._r=requestAnimationFrame(()=>{$('#pn').textContent='Page '+curPage()+' of '+N})};
+ const build=async()=>{
+  const my=++gen;wrap.innerHTML='';
+  const w=(vb.clientWidth-20)*z,dpr=Math.min(window.devicePixelRatio||1,2);
+  const io=new IntersectionObserver(es=>es.forEach(en=>{if(!en.isIntersecting)return;io.unobserve(en.target);const h=en.target;if(my!==gen||h.dataset.done)return;h.dataset.done=1;
+   pdf.getPage(+h.dataset.n).then(pg=>{const sc=w/pg.getViewport({scale:1}).width,c=document.createElement('canvas'),vp=pg.getViewport({scale:sc*dpr});c.width=vp.width;c.height=vp.height;c.style.cssText='width:100%;height:100%';h.appendChild(c);return pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise})}),{root:vb,rootMargin:'600px 0px'});
+  for(let i=1;i<=N;i++){
+   const f=await info(i);if(my!==gen)return;
+   const h=document.createElement('div');
+   h.className='pg';h.dataset.n=i;h.style.cssText=`width:${w}px;height:${w*f.H/f.W}px;--s:${w/f.W}`;h.innerHTML='<button class="bm"></button>'+ovl(i,f);wrap.appendChild(h);io.observe(h)}
+  paint();
+ };
+ $('#zm').onclick=()=>{z=Math.max(.6,z/1.25);ready=build()};
+ $('#zp').onclick=()=>{z=Math.min(4,z*1.25);ready=build()};
+ ready=build();await ready;
+}
+async function showDocx(blob){
+ await lib('docx');
+ const r=await mammoth.convertToHtml({arrayBuffer:await blob.arrayBuffer()});
+ $('#vb').innerHTML=`<div class="paper">${r.value||'<p>This document is empty.</p>'}</div>`;
+ $('#vb').querySelectorAll('a').forEach(a=>{a.target='_blank';a.rel='noopener'});
+}
+async function showSheet(blob){
+ await lib('xlsx');
+ const wb=XLSX.read(await blob.arrayBuffer(),{type:'array'}),names=wb.SheetNames;let cur=0;
+ const draw=()=>{const rows=XLSX.utils.sheet_to_json(wb.Sheets[names[cur]],{header:1,raw:false,defval:''}),cap=rows.slice(0,1000);
+  $('#vb').innerHTML=`<div class="sheets">${names.map((n,i)=>`<button data-sh="${i}" class="${i==cur?'on':''}">${esc(n)}</button>`).join('')}</div><div class="paper" style="padding:8px"><table>${cap.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>${rows.length>1000?'<p class="mut">Showing the first 1000 rows. Tap Open outside to see everything.</p>':''}`;
+  $('#vb').querySelectorAll('[data-sh]').forEach(b=>b.onclick=()=>{cur=+b.dataset.sh;draw()})};
+ draw();
+}
+let renId=null,repId=null;
+function rDocs(){
+ $('#app').innerHTML=`<div class="bar"><h1>Documents</h1><button id="ed1">${editMode?'Done':'Edit'}</button></div>
+ ${hb('docs')}
+ <div class="row"><label class="bt p" for="fp" style="flex:1">+ Attach documents</label></div>
+ <div class="grid ${editMode?'edit':''}">${D.docs.map(d=>`<div class="doc" data-id="${d.id}"><span class="tag">${esc(ext(d.fname).toUpperCase())}</span>${renId==d.id?`<input type="text" id="ri" value="${esc(d.name)}">`:`<b>${esc(d.name)}</b>`}${editMode?`<span class="acts">${renId==d.id?`<span class="mini" data-sv="1">Save</span>`:`<span class="mini" data-ren="${d.id}">Rename</span>`}<label class="mini" for="rf" data-rep="${d.id}">Replace file</label><span class="mini bad" data-del="${d.id}">Delete</span></span>`:'<small>Tap to open</small>'}</div>`).join('')}</div>
+ ${D.docs.length?'':'<p class="empty">No documents yet. Attach your Excel, PDF and Word files once, then open them with one tap.</p>'}`;
+ const commit=()=>{const i=$('#ri'),d=D.docs.find(x=>x.id==renId);if(i&&d&&i.value.trim())d.name=i.value.trim();renId=null;save();render()};
+ $('#ed1').onclick=()=>{editMode=!editMode;renId=null;render()};
+ $('.grid').onkeydown=e=>{if(e.key=='Enter'&&e.target.id=='ri')commit()};
+ $('.grid').onclick=async e=>{
+  const t=e.target.dataset,b=e.target.closest('.doc');
+  if(t.del){if(confirm('Delete this document button and its file?')){D.docs=D.docs.filter(x=>x.id!=t.del);delete urls[t.del];if(renId==t.del)renId=null;save();render()}return}
+  if(t.ren){renId=t.ren;render();const i=$('#ri');if(i){i.focus();i.select()}return}
+  if(t.rep){repId=t.rep;return}
+  if(t.sv){commit();return}
+  if(e.target.id=='ri'||!b||editMode)return;
+  viewDoc(D.docs.find(x=>x.id==b.dataset.id))};
+}
+$('#fp').onchange=async e=>{
+ for(const f of e.target.files){const id=uid();try{await idb('put',id,f);urls[id]=URL.createObjectURL(f);D.docs.push({id,name:f.name.replace(/\.[^.]+$/,''),fname:f.name})}catch(x){toast('Could not store '+f.name)}}
+ e.target.value='';save();render()};
+
+$('#rf').onchange=async e=>{const f=e.target.files[0];e.target.value='';const d=D.docs.find(x=>x.id==repId);if(!f||!d)return;try{const nid=uid();await idb('put',nid,f);delete urls[d.id];d.id=nid;urls[nid]=URL.createObjectURL(f);d.fname=f.name;save();render();toast('File replaced')}catch(x){toast('Could not replace file')}};
+let edL=null,edI=null;
+const commitL=()=>{const i=$('#el'),l=D.lists.find(x=>x.id==edL);if(i&&l&&i.value.trim())l.name=i.value.trim();edL=null;save();render()};
+const commitI=()=>{const i=$('#ei');if(i&&i.value.trim())for(const l of D.lists){const it=l.items.find(x=>x.id==edI);if(it)it.t=i.value.trim()}edI=null;save();render()};
+const openN={};
+function rLists(){
+ $('#app').innerHTML=`<h1>Checklists</h1>${hb('lists')}<div class="row"><input type="text" id="nl" placeholder="New checklist name"><button class="p" id="al">Add</button></div>
+ ${D.lists.map(l=>`<div class="card" data-l="${l.id}"><div class="bar">${edL==l.id?`<input type="text" id="el" value="${esc(l.name)}" style="flex:1;margin-right:8px">`:`<h2>${esc(l.name)}</h2>`}<span class="hd"><span class="cnt">${l.items.filter(i=>i.d).length}/${l.items.length}</span><button data-nt="${l.id}" aria-label="Notes for this checklist">📝${l.note?' •':''}</button></span></div>
+ ${openN[l.id]?`<textarea data-tn="${l.id}" placeholder="Notes for this checklist">${esc(l.note||'')}</textarea>`:''}
+ ${l.items.map(i=>`<div class="it ${i.d?'done':''}"><input type="checkbox" data-c="${i.id}" ${i.d?'checked':''}>${edI==i.id?`<input type="text" id="ei" value="${esc(i.t)}" style="flex:1">`:`<span>${esc(i.t)}</span>`}<button ${edI==i.id?'data-svi="1">Save':`data-e="${i.id}">Edit`}</button><button class="d" data-x="${i.id}">Delete</button></div>`).join('')}
+ <div class="row" style="margin-top:10px"><input type="text" placeholder="Add item" data-n="${l.id}"><button data-a="${l.id}">Add</button></div>
+ <div class="bar" style="gap:8px;flex-wrap:wrap"><button ${edL==l.id?'data-svl="1">Save':`data-rl="${l.id}">Rename`}</button><button data-clr="${l.id}">Clear ticked</button><button class="d" data-dl="${l.id}">Delete list</button></div></div>`).join('')}
+ ${D.lists.length?'':'<p class="empty">No checklists yet. Name one above to start.</p>'}`;
+ const addL=()=>{const v=$('#nl').value.trim();if(v){D.lists.push({id:uid(),name:v,items:[]});save();render()}};
+ $('#al').onclick=addL;$('#nl').onkeydown=e=>{if(e.key=='Enter')addL()};
+ const addI=id=>{const i=document.querySelector(`[data-n="${id}"]`),v=i.value.trim();if(!v)return;D.lists.find(l=>l.id==id).items.push({id:uid(),t:v,d:false});save();render();document.querySelector(`[data-n="${id}"]`).focus()};
+ $('#app').onkeydown=e=>{if(e.key!='Enter')return;if(e.target.dataset.n)addI(e.target.dataset.n);else if(e.target.id=='el')commitL();else if(e.target.id=='ei')commitI()};
+ if($('#el')){$('#el').focus();$('#el').select()}
+ if($('#ei')){$('#ei').focus();$('#ei').select()}
+ $('#app').onclick=e=>{const t=e.target.dataset;if(!t)return;
+  const card=e.target.closest('[data-l]');const l=card&&D.lists.find(x=>x.id==card.dataset.l);
+  if(t.nt){openN[t.nt]=!openN[t.nt];render()}
+  else if(t.rl){edL=t.rl;edI=null;render()}
+  else if(t.svl)commitL();
+  else if(t.e){edI=t.e;edL=null;render()}
+  else if(t.svi)commitI();
+  else if(t.a)addI(t.a);
+  else if(t.x){l.items=l.items.filter(i=>i.id!=t.x);save();render()}
+  else if(t.clr){l.items=l.items.filter(i=>!i.d);save();render()}
+  else if(t.dl){if(confirm('Delete this checklist?')){D.lists=D.lists.filter(x=>x.id!=t.dl);save();render()}}};
+ $('#app').oninput=e=>{const id=e.target.dataset.tn;if(!id)return;D.lists.find(x=>x.id==id).note=e.target.value;save(true)};
+ $('#app').onchange=e=>{const c=e.target.dataset.c;if(!c)return;const l=D.lists.find(x=>x.id==e.target.closest('[data-l]').dataset.l);l.items.find(i=>i.id==c).d=e.target.checked;save();render()};
+}
+
+function rNotes(){
+ if(openNote)return rEditor();
+ $('#app').innerHTML=`<div class="bar"><h1>Notes</h1><button class="p" id="nn">+ New note</button></div>${hb('notes')}
+ ${D.notes.slice().sort((a,b)=>b.ts-a.ts).map(n=>`<button class="note" data-o="${n.id}"><b>${esc(n.title||'Untitled')}</b><small>${new Date(n.ts).toLocaleString()}</small></button>`).join('')}
+ ${D.notes.length?'':'<p class="empty">No notes yet. Tap New note to write one.</p>'}`;
+ $('#nn').onclick=()=>{const n={id:uid(),title:'',html:'',ts:Date.now()};D.notes.push(n);save();openNote=n.id;render()};
+ $('#app').onclick=e=>{const b=e.target.closest('[data-o]');if(b){openNote=b.dataset.o;render()}};
+}
+function rEditor(){
+ const n=D.notes.find(x=>x.id==openNote);if(!n){openNote=null;return render()}
+ $('#app').innerHTML=`<div class="bar"><button id="bk">Back</button><button class="d" id="dn">Delete</button></div>${hb('notes')}
+ <h1 style="margin-top:12px"><input type="text" id="tt" placeholder="Title" value="${esc(n.title)}"></h1>
+ <div class="tb" id="tb"><button data-c="bold"><b>B</b></button><button data-c="italic"><i>I</i></button><button data-c="underline"><u>U</u></button>
+ <button data-c="hiliteColor" style="background:#ffe45c;color:#000">Mark</button><button data-c="removeFormat">Clear</button>
+ <select id="sz"><option value="">Size</option><option value="2">Small</option><option value="3">Normal</option><option value="5">Large</option><option value="6">Huge</option></select></div>
+ <div id="ed" contenteditable="true">${n.html}</div>
+ <div class="row" style="margin-top:12px"><button class="p" id="pdf" style="flex:1">Export PDF</button><button class="p" id="wa" style="flex:1">Send via WhatsApp</button></div>`;
+ const ed=$('#ed'),upd=typing=>{const h=ed.innerHTML,t=$('#tt').value;if(h===n.html&&t===n.title)return;n.html=h;n.title=t;n.ts=Date.now();save(typing===true)};
+ ed.oninput=()=>upd(true);$('#tt').oninput=()=>upd(true);
+ $('#tb').onmousedown=e=>{if(e.target.tagName!='SELECT')e.preventDefault()};
+ $('#tb').onclick=e=>{const c=e.target.closest('button');if(!c)return;ed.focus();document.execCommand(c.dataset.c,false,c.dataset.c=='hiliteColor'?'#ffe45c':null);upd()};
+ $('#sz').onchange=e=>{if(!e.target.value)return;ed.focus();document.execCommand('fontSize',false,e.target.value);e.target.value='';upd()};
+ $('#bk').onclick=()=>{openNote=null;render()};
+ $('#dn').onclick=()=>{if(confirm('Delete this note?')){D.notes=D.notes.filter(x=>x.id!=n.id);save();openNote=null;render()}};
+ $('#pdf').onclick=()=>{upd();$('#print').innerHTML=`<h1>${esc(n.title||'Untitled')}</h1>${n.html}`;toast('Choose "Save as PDF" in the print window');setTimeout(()=>window.print(),400)};
+ $('#wa').onclick=()=>{upd();const t=(n.title?n.title+'\n\n':'')+ed.innerText;window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank')};
+}
+
+const PRE=[['WhatsApp','com.whatsapp'],['WhatsApp Business','com.whatsapp.w4b'],['Excel','com.microsoft.office.excel'],['Word','com.microsoft.office.word'],['PowerPoint','com.microsoft.office.powerpoint'],['Outlook','com.microsoft.office.outlook'],['Teams','com.microsoft.teams'],['Gmail','com.google.android.gm'],['Google Drive','com.google.android.apps.docs'],['Google Maps','com.google.android.apps.maps'],['Google Calendar','com.google.android.calendar'],['Google Meet','com.google.android.apps.tachyon'],['Zoom','us.zoom.videomeetings'],['Slack','com.Slack'],['Adobe Acrobat','com.adobe.reader']];
+const appHref=t=>t.includes(':')?t:`intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=${t};S.browser_fallback_url=${encodeURIComponent('https://play.google.com/store/apps/details?id='+t)};end`;
+let af=null,appEdit=false;
+function rApps(){
+ const f=af;
+ $('#app').innerHTML=`<div class="bar"><h1>Apps</h1><button id="ae">${appEdit?'Done':'Edit'}</button></div>${hb('apps')}
+ ${f?`<div class="card"><h2>${f.id?'Edit app button':'New app button'}</h2><div style="height:8px"></div><input type="text" data-af="name" placeholder="Button name" value="${esc(f.name||'')}" style="margin-bottom:8px"><input type="text" data-af="target" placeholder="Package name or link" value="${esc(f.target||'')}" style="margin-bottom:8px" autocapitalize="off" autocorrect="off"><p class="mut" style="margin:0 0 8px;font-size:14px">Package name: the text after id= in the app's Play Store link, for example com.whatsapp</p><div class="row"><button class="p" id="as" style="flex:1">Save</button><button id="ac" style="flex:1">Cancel</button></div></div>`:`<div class="row"><select id="pre"><option value="">Add a popular app\u2026</option>${PRE.map((a,i)=>`<option value="${i}">${esc(a[0])}</option>`).join('')}</select><button class="p" id="an">Custom</button></div>`}
+ <div class="grid ${appEdit?'edit':''}">${D.apps.map(a=>appEdit?`<div class="doc"><b>${esc(a.name)}</b><span class="acts"><span class="mini" data-ea="${a.id}">Edit</span><span class="mini bad" data-da="${a.id}">Delete</span></span></div>`:`<a class="doc" href="${esc(appHref(a.target))}"><b>${esc(a.name)}</b><small>Tap to open</small></a>`).join('')}</div>
+ ${D.apps.length||f?'':'<p class="empty">No app buttons yet. Pick a popular app above, or add your own with Custom.</p>'}`;
+ $('#ae').onclick=()=>{appEdit=!appEdit;af=null;render()};
+ if($('#pre'))$('#pre').onchange=e=>{const a=PRE[e.target.value];if(!a)return;D.apps.push({id:uid(),name:a[0],target:a[1]});save();render()};
+ if($('#an'))$('#an').onclick=()=>{af={};render()};
+ if($('#ac'))$('#ac').onclick=()=>{af=null;render()};
+ if($('#as'))$('#as').onclick=()=>{const v={};document.querySelectorAll('[data-af]').forEach(i=>v[i.dataset.af]=i.value.trim());
+  if(!v.name||!v.target)return toast('Enter a name and a package name or link');
+  if(f.id)Object.assign(D.apps.find(x=>x.id==f.id),v);else D.apps.push(Object.assign({id:uid()},v));
+  af=null;save();render()};
+ $('.grid').onclick=e=>{const t=e.target.dataset;
+  if(t.ea){af=Object.assign({},D.apps.find(x=>x.id==t.ea));render();window.scrollTo(0,0)}
+  else if(t.da&&confirm('Delete this app button?')){D.apps=D.apps.filter(x=>x.id!=t.da);save();render()}};
+}
+let pf=null;
+function rPeople(){
+ const f=pf,fld=(k,l,t)=>`<input type="${t||'text'}" data-f="${k}" placeholder="${l}" value="${esc(f[k]||'')}" style="margin-bottom:8px">`;
+ const list=D.people.slice().sort((a,b)=>(a.dept||'').localeCompare(b.dept||'')||(a.name||'').localeCompare(b.name||''));
+ $('#app').innerHTML=`<div class="bar"><h1>People</h1>${f?'':'<button class="p" id="ap">+ Add person</button>'}</div>${hb('people')}
+ ${f?`<div class="card"><h2>${f.id?'Edit person':'New person'}</h2><div style="height:8px"></div>${fld('name','Name')}${fld('dept','Department')}${fld('role','Role (e.g. Overseer)')}${fld('phone','Phone, with country code (+1 555 123 4567)','tel')}${fld('email','Email','email')}<div class="row"><button class="p" id="sv" style="flex:1">Save</button><button id="cx" style="flex:1">Cancel</button></div></div>`:''}
+ ${list.map(p=>{const dg=(p.phone||'').replace(/\D/g,'');return `<div class="card"><div class="bar"><h2>${esc(p.name)}</h2>${p.dept?`<span class="tag">${esc(p.dept)}</span>`:''}</div>${p.role?`<div class="mut">${esc(p.role)}</div>`:''}<div class="mut" style="word-break:break-all">${esc(p.phone||'')}${p.phone&&p.email?' · ':''}${esc(p.email||'')}</div>
+ <div class="row" style="margin-top:10px">${dg?`<a class="bt" href="tel:${esc(p.phone.replace(/[^\d+]/g,''))}" style="flex:1">📞 Call</a><a class="bt" href="https://wa.me/${dg}" target="_blank" rel="noopener" style="flex:1">💬 WhatsApp</a>`:''}${p.email?`<a class="bt" href="mailto:${esc(p.email)}" style="flex:1">✉️ Email</a>`:''}</div>
+ <div class="bar"><button data-ep="${p.id}">Edit</button><button class="d" data-dp="${p.id}">Delete</button></div></div>`}).join('')}
+ ${list.length||f?'':'<p class="empty">No people yet. Add the overseers and contacts you may need to reach, then call, message or email them with one tap.</p>'}`;
+ if($('#ap'))$('#ap').onclick=()=>{pf={};render()};
+ if($('#cx'))$('#cx').onclick=()=>{pf=null;render()};
+ if($('#sv'))$('#sv').onclick=()=>{const v={};document.querySelectorAll('[data-f]').forEach(i=>v[i.dataset.f]=i.value.trim());
+  if(!v.name)return toast('Enter a name');
+  if(f.id)Object.assign(D.people.find(x=>x.id==f.id),v);else D.people.push(Object.assign({id:uid()},v));
+  pf=null;save();render()};
+ $('#app').onclick=e=>{const t=e.target.dataset;
+  if(t.ep){pf=Object.assign({},D.people.find(x=>x.id==t.ep));render();window.scrollTo(0,0)}
+  else if(t.dp&&confirm('Delete this person?')){D.people=D.people.filter(x=>x.id!=t.dp);save();render()}};
+}
+function rSet(){
+ $('#app').innerHTML=`<h1>Settings</h1><div class="card"><h2>Backup</h2><p class="mut">Saves your documents, checklists and notes in one file. Do this before clearing your browser data or switching phones.</p>
+ <div class="row"><button class="p" id="ex" style="flex:1">Export backup</button><label class="bt" for="imp" style="flex:1">Import backup</label></div></div>
+ <div class="card"><h2>Stored here</h2><p class="mut">${D.docs.length} documents, ${D.lists.length} checklists, ${D.notes.length} notes, ${D.people.length} people, ${D.apps.length} app buttons. Everything stays on this device.</p></div>
+ <div class="card"><h2>Erase data</h2><p class="mut">Removes all documents, checklists, notes and people from this device. Export a backup first.</p><button class="d" id="er">Erase everything</button></div>`;
+ $('#er').onclick=async()=>{if(!confirm('Erase all documents, checklists, notes and people from this device?'))return;if(!confirm('This cannot be undone without a backup. Erase now?'))return;for(const d of D.docs)await idb('del',d.id);for(const k in urls)delete urls[k];D={docs:[],lists:[],notes:[],people:[],apps:[]};resetHist();save();render();toast('Everything erased')};
+ $('#ex').onclick=async()=>{
+  try{const files={};for(const d of D.docs){const b=await idb('get',d.id);if(b)files[d.id]=await new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b)})}
+  const blob=new Blob([JSON.stringify({v:1,data:D,files})],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='oversight-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();toast('Backup file created')}catch(e){toast('Backup failed')}};
+}
+$('#imp').onchange=async e=>{
+ const f=e.target.files[0];e.target.value='';if(!f)return;
+ try{const j=JSON.parse(await f.text());if(!j.data)throw 0;
+  if(!confirm('Replace everything on this device with the backup?'))return;
+  for(const d of D.docs)await idb('del',d.id);
+  for(const id in urls)delete urls[id];
+  for(const id in j.files||{}){const b=await (await fetch(j.files[id])).blob();await idb('put',id,b)}
+  D=Object.assign({docs:[],lists:[],notes:[],people:[],apps:[]},j.data);resetHist();save();await loadUrls();render();toast('Backup restored')}catch(x){toast('That file is not a valid backup')}};
+render();loadUrls();
+idb('keys').then(ks=>(ks||[]).forEach(k=>{if(!D.docs.some(d=>d.id==k))idb('del',k)})).catch(()=>{});
+if('serviceWorker' in navigator&&location.protocol.indexOf('http')==0)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script></body></html>
