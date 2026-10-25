@@ -53,11 +53,14 @@ textarea{width:100%;min-height:96px;background:var(--bg);color:var(--ink);border
 .fi{position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none}
 a.bt,label.bt{color:var(--ink);text-decoration:none;display:flex;align-items:center;justify-content:center;text-align:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-height:44px;cursor:pointer}
 a.bt.p,label.bt.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600}
-#toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;display:none;z-index:30}
+#fbar{position:fixed;left:0;right:0;bottom:calc(61px + env(safe-area-inset-bottom));z-index:4;display:flex;gap:6px;padding:6px 10px;background:var(--card);border-top:1px solid var(--line)}#fbar:empty{display:none}#fbar button{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-height:42px;padding:6px 8px;border-color:var(--ac)}body.hf{padding-bottom:calc(132px + env(safe-area-inset-bottom))}
+#toast{position:fixed;left:50%;bottom:calc(140px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;display:none;z-index:30}
 #vw{position:fixed;inset:0;background:var(--bg);z-index:20;display:none;flex-direction:column;padding-top:env(safe-area-inset-top)}
 #vw.on{display:flex}
 #vh{display:flex;gap:8px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--card)}
 #vh b{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#vfav{display:flex;gap:6px;padding:6px 10px;background:var(--card);border-bottom:1px solid var(--line)}#vfav:empty{display:none}#vfav button{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:6px 8px;min-height:40px}
+.fv{position:absolute;top:0;right:0;padding:8px 12px;font-size:20px;line-height:1;color:var(--ac)}.doc.fav{border-color:var(--ac)}
 #vtool{display:none;position:relative;background:var(--bg);border-bottom:1px solid var(--line);padding:6px 10px}#vtool.on{display:block}
 #bmp{position:absolute;top:100%;left:10px;right:10px;margin-top:4px;max-height:55vh;overflow:auto;z-index:6;box-shadow:0 8px 20px #0006}
 #vb{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:10px calc(10px + env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) 10px;touch-action:pan-x pan-y pinch-zoom}
@@ -79,7 +82,8 @@ a.bt.p,label.bt.p{background:var(--ac);color:#fff;border-color:var(--ac);font-we
 </style></head><body>
 <main id="app"></main>
 <nav id="nav"></nav>
-<div id="vw"><div id="vh"><button id="vx">Close</button><b id="vt"></b><button id="vo">Open outside</button></div><div id="vtool"></div><div id="vb"></div></div>
+<div id="fbar"></div>
+<div id="vw"><div id="vh"><button id="vx">Close</button><b id="vt"></b><button id="vo">Open outside</button></div><div id="vfav"></div><div id="vtool"></div><div id="vb"></div></div>
 <div id="ns"><b id="nst"></b><textarea id="nsa" placeholder="Type your note"></textarea><div class="row" style="margin:8px 0 0"><button class="p" id="nsd" style="flex:1">Done</button></div></div>
 <div id="toast"></div>
 <div id="print"></div>
@@ -118,6 +122,7 @@ function openDoc(d){const u=urls[d.id];if(!u)return toast('File not found. Re-at
 function render(){
  $('#nav').innerHTML=[['docs','Docs'],['lists','Lists'],['notes','Notes'],['people','People'],['apps','Apps'],['set','Settings']].map(([k,l])=>`<button class="${tab==k?'on':''}" data-t="${k}">${l}</button>`).join('');
  $('#nav').onclick=e=>{const t=e.target.dataset.t;if(t){tab=t;openNote=null;render()}};
+ renderBar();
  const A=$('#app');A.onclick=A.onchange=A.oninput=A.onkeydown=null;
  ({docs:rDocs,lists:rLists,notes:rNotes,people:rPeople,apps:rApps,set:rSet})[tab]();
 }
@@ -132,14 +137,18 @@ const loadJs=u=>new Promise((ok,no)=>{const e=document.createElement('script');e
 const lib=k=>loaded[k]||(loaded[k]=(async()=>{for(const u of LIBS[k]){try{await loadJs(u);return}catch(e){}}delete loaded[k];throw new Error('offline')})());
 async function pdfWorker(){if(pdfWorker.u)return pdfWorker.u;for(const u of LIBS.wk){try{const r=await fetch(u);if(!r.ok)continue;return pdfWorker.u=URL.createObjectURL(new Blob([await r.text()],{type:'text/javascript'}))}catch(e){}}throw new Error('offline')}
 let vwOpen=false,curDoc=null;
-function closeV(){$('#ns').classList.remove('on');$('#vw').classList.remove('on');$('#vb').innerHTML='';$('#vb').onscroll=null;$('#vtool').className='';$('#vtool').innerHTML='';vwOpen=false;curDoc=null}
+function renderBar(){const f=D.docs.filter(x=>x.fav);$('#fbar').innerHTML=f.map(x=>`<button data-fb="${x.id}">★ ${esc(x.name)}</button>`).join('');document.body.classList.toggle('hf',f.length>0)}
+$('#fbar').onclick=e=>{const b=e.target.closest('[data-fb]');if(!b)return;const d=D.docs.find(x=>x.id==b.dataset.fb);if(d)viewDoc(d)};
+function renderFav(){const f=D.docs.filter(x=>x.fav);$('#vfav').innerHTML=f.map(x=>`<button data-fv="${x.id}" class="${curDoc&&curDoc.id==x.id?'p':''}">★ ${esc(x.name)}</button>`).join('')}
+$('#vfav').onclick=e=>{const b=e.target.closest('[data-fv]');if(!b)return;const d=D.docs.find(x=>x.id==b.dataset.fv);if(d&&(!curDoc||curDoc.id!=d.id))viewDoc(d)};
+function closeV(){$('#vfav').innerHTML='';$('#ns').classList.remove('on');$('#vw').classList.remove('on');$('#vb').innerHTML='';$('#vb').onscroll=null;$('#vtool').className='';$('#vtool').innerHTML='';vwOpen=false;curDoc=null}
 $('#vx').onclick=()=>{if(vwOpen)history.back()};
 $('#vo').onclick=()=>{if(curDoc)openDoc(curDoc)};
 window.addEventListener('popstate',()=>{if(vwOpen)closeV()});
 async function viewDoc(d){
  if(!urls[d.id])return toast('File not found. Re-attach it.');
  $('#ns').classList.remove('on');$('#vtool').className='';$('#vtool').innerHTML='';$('#vb').onscroll=null;
- curDoc=d;$('#vt').textContent=d.name;$('#vb').innerHTML='<p class="empty">Loading\u2026</p>';$('#vw').classList.add('on');
+ curDoc=d;renderFav();$('#vt').textContent=d.name;$('#vb').innerHTML='<p class="empty">Loading\u2026</p>';$('#vw').classList.add('on');
  if(!vwOpen){vwOpen=true;history.pushState({v:1},'')}
  const x=ext(d.fname);
  try{
@@ -252,13 +261,14 @@ function rDocs(){
  $('#app').innerHTML=`<div class="bar"><h1>Documents</h1><button id="ed1">${editMode?'Done':'Edit'}</button></div>
  ${hb('docs')}
  <div class="row"><label class="bt p" for="fp" style="flex:1">+ Attach documents</label></div>
- <div class="grid ${editMode?'edit':''}">${D.docs.map(d=>`<div class="doc" data-id="${d.id}"><span class="tag">${esc(ext(d.fname).toUpperCase())}</span>${renId==d.id?`<input type="text" id="ri" value="${esc(d.name)}">`:`<b>${esc(d.name)}</b>`}${editMode?`<span class="acts">${renId==d.id?`<span class="mini" data-sv="1">Save</span>`:`<span class="mini" data-ren="${d.id}">Rename</span>`}<label class="mini" for="rf" data-rep="${d.id}">Replace file</label><span class="mini bad" data-del="${d.id}">Delete</span></span>`:'<small>Tap to open</small>'}</div>`).join('')}</div>
+ <div class="grid ${editMode?'edit':''}">${D.docs.slice().sort((a,b)=>(b.fav?1:0)-(a.fav?1:0)).map(d=>`<div class="doc${d.fav?' fav':''}" data-id="${d.id}"><span class="fv" data-fv="${d.id}">${d.fav?'★':'☆'}</span><span class="tag">${esc(ext(d.fname).toUpperCase())}</span>${renId==d.id?`<input type="text" id="ri" value="${esc(d.name)}">`:`<b>${esc(d.name)}</b>`}${editMode?`<span class="acts">${renId==d.id?`<span class="mini" data-sv="1">Save</span>`:`<span class="mini" data-ren="${d.id}">Rename</span>`}<label class="mini" for="rf" data-rep="${d.id}">Replace file</label><span class="mini bad" data-del="${d.id}">Delete</span></span>`:'<small>Tap to open</small>'}</div>`).join('')}</div>
  ${D.docs.length?'':'<p class="empty">No documents yet. Attach your Excel, PDF and Word files once, then open them with one tap.</p>'}`;
  const commit=()=>{const i=$('#ri'),d=D.docs.find(x=>x.id==renId);if(i&&d&&i.value.trim())d.name=i.value.trim();renId=null;save();render()};
  $('#ed1').onclick=()=>{editMode=!editMode;renId=null;render()};
  $('.grid').onkeydown=e=>{if(e.key=='Enter'&&e.target.id=='ri')commit()};
  $('.grid').onclick=async e=>{
   const t=e.target.dataset,b=e.target.closest('.doc');
+  if(t.fv){const x=D.docs.find(y=>y.id==t.fv);if(x.fav)delete x.fav;else if(D.docs.filter(y=>y.fav).length>=3)return toast('Only 3 favorites. Unstar one first.');else x.fav=true;save();render();return}
   if(t.del){if(confirm('Delete this document button and its file?')){D.docs=D.docs.filter(x=>x.id!=t.del);delete urls[t.del];if(renId==t.del)renId=null;save();render()}return}
   if(t.ren){renId=t.ren;render();const i=$('#ri');if(i){i.focus();i.select()}return}
   if(t.rep){repId=t.rep;return}
