@@ -54,6 +54,9 @@ textarea{width:100%;min-height:96px;background:var(--bg);color:var(--ink);border
 a.bt,label.bt{color:var(--ink);text-decoration:none;display:flex;align-items:center;justify-content:center;text-align:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-height:44px;cursor:pointer}
 a.bt.p,label.bt.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600}
 #fbar{position:fixed;left:0;right:0;bottom:calc(61px + env(safe-area-inset-bottom));z-index:4;display:flex;gap:6px;padding:6px 10px;background:var(--card);border-top:1px solid var(--line)}#fbar:empty{display:none}#fbar button{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-height:42px;padding:6px 8px;border-color:var(--ac)}body.hf{padding-bottom:calc(132px + env(safe-area-inset-bottom))}
+#evbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;gap:8px;align-items:center;padding:8px 14px;background:var(--bg);border-bottom:1px solid var(--line)}
+#evbar select{flex:1;font-weight:700}
+#evp{display:none;position:absolute;right:14px;top:100%;margin-top:4px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px;gap:8px;flex-direction:column;box-shadow:0 8px 20px #0005;min-width:180px}#evp.on{display:flex}
 #toast{position:fixed;left:50%;bottom:calc(140px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;display:none;z-index:30}
 #vw{position:fixed;inset:0;background:var(--bg);z-index:20;display:none;flex-direction:column;padding-top:env(safe-area-inset-top)}
 #vw.on{display:flex}
@@ -80,6 +83,7 @@ a.bt.p,label.bt.p{background:var(--ac);color:#fff;border-color:var(--ac);font-we
 #print{display:none}
 @media print{body>*:not(#print){display:none!important}#print{display:block;color:#000;background:#fff;font-size:14pt}body{padding:0;background:#fff}}
 </style></head><body>
+<div id="evbar"><select id="evsel" aria-label="Event"></select><button id="evm" aria-label="Event options">&#8943;</button><div id="evp"><button id="evr">Rename event</button><button id="evd" class="d">Delete event</button></div></div>
 <main id="app"></main>
 <nav id="nav"></nav>
 <div id="fbar"></div>
@@ -92,8 +96,15 @@ a.bt.p,label.bt.p{background:var(--ac);color:#fff;border-color:var(--ac);font-we
 <input type="file" id="rf" class="fi">
 <script>
 const $=s=>document.querySelector(s),uid=()=>Math.random().toString(36).slice(2,10);
-let D={docs:[],lists:[],notes:[],people:[],apps:[]};
-try{D=Object.assign(D,JSON.parse(localStorage.getItem('ov')||'{}'))}catch(e){}
+const blank=()=>({docs:[],lists:[],notes:[],people:[],apps:[]});
+const evData=e=>e.data=Object.assign(blank(),e.data);
+let R=null;try{R=JSON.parse(localStorage.getItem('ov2')||'null')}catch(e){}
+if(!R||!Array.isArray(R.events)||!R.events.length){let old={};try{old=JSON.parse(localStorage.getItem('ov')||'{}')}catch(e){}R={cur:'e1',events:[{id:'e1',name:'Event 1',data:old}]}}
+R.events.forEach(evData);
+const curEv=()=>R.events.find(e=>e.id==R.cur)||R.events[0];
+R.cur=curEv().id;
+let D=curEv().data;
+const persist=()=>localStorage.setItem('ov2',JSON.stringify(R));
 const KEYS=['docs','lists','notes','people','apps'],H={},last={};let lastTyp=null,lastT=0;
 const resetHist=()=>KEYS.forEach(k=>{H[k]={u:[],r:[]};last[k]=JSON.stringify(D[k])});resetHist();
 const refreshHB=()=>{document.querySelectorAll('[data-un]').forEach(b=>b.disabled=!H[b.dataset.un].u.length);document.querySelectorAll('[data-re]').forEach(b=>b.disabled=!H[b.dataset.re].r.length)};
@@ -102,10 +113,10 @@ const save=typing=>{const now=Date.now();let typed=null;
   if(!(typing&&lastTyp===k&&now-lastT<2000)){H[k].u.push(last[k]);if(H[k].u.length>100)H[k].u.shift()}
   H[k].r=[];last[k]=j;if(typing)typed=k});
  if(typed){lastTyp=typed;lastT=now}else lastTyp=null;
- localStorage.setItem('ov',JSON.stringify(D));refreshHB()};
+ persist();refreshHB()};
 async function hist(k,dir){const h=H[k],from=dir<0?h.u:h.r,to=dir<0?h.r:h.u;
  if(!from.length)return toast(dir<0?'Nothing to undo':'Nothing to redo');
- to.push(last[k]);const j=from.pop();D[k]=JSON.parse(j);last[k]=j;lastTyp=null;localStorage.setItem('ov',JSON.stringify(D));
+ to.push(last[k]);const j=from.pop();D[k]=JSON.parse(j);last[k]=j;lastTyp=null;persist();
  if(k=='docs'){renId=null;await loadUrls()}
  edL=null;edI=null;pf=null;af=null;render();toast(dir<0?'Undone':'Redone')}
 const hb=k=>`<div class="row"><button data-un="${k}" style="flex:1" ${H[k].u.length?'':'disabled'}>\u21B6 Undo</button><button data-re="${k}" style="flex:1" ${H[k].r.length?'':'disabled'}>\u21B7 Redo</button></div>`;
@@ -122,7 +133,7 @@ function openDoc(d){const u=urls[d.id];if(!u)return toast('File not found. Re-at
 function render(){
  $('#nav').innerHTML=[['docs','Docs'],['lists','Lists'],['notes','Notes'],['people','People'],['apps','Apps'],['set','Settings']].map(([k,l])=>`<button class="${tab==k?'on':''}" data-t="${k}">${l}</button>`).join('');
  $('#nav').onclick=e=>{const t=e.target.dataset.t;if(t){tab=t;openNote=null;render()}};
- renderBar();
+ renderEv();renderBar();
  const A=$('#app');A.onclick=A.onchange=A.oninput=A.onkeydown=null;
  ({docs:rDocs,lists:rLists,notes:rNotes,people:rPeople,apps:rApps,set:rSet})[tab]();
 }
@@ -137,6 +148,12 @@ const loadJs=u=>new Promise((ok,no)=>{const e=document.createElement('script');e
 const lib=k=>loaded[k]||(loaded[k]=(async()=>{for(const u of LIBS[k]){try{await loadJs(u);return}catch(e){}}delete loaded[k];throw new Error('offline')})());
 async function pdfWorker(){if(pdfWorker.u)return pdfWorker.u;for(const u of LIBS.wk){try{const r=await fetch(u);if(!r.ok)continue;return pdfWorker.u=URL.createObjectURL(new Blob([await r.text()],{type:'text/javascript'}))}catch(e){}}throw new Error('offline')}
 let vwOpen=false,curDoc=null;
+function renderEv(){$('#evsel').innerHTML=R.events.map(e=>`<option value="${e.id}"${e.id==R.cur?' selected':''}>${esc(e.name)}</option>`).join('')+'<option value="__new">+ Add event\u2026</option>'}
+async function switchEv(id){R.cur=id;D=evData(curEv());resetHist();persist();editMode=false;openNote=null;pf=null;af=null;edL=null;edI=null;renId=null;$('#evp').classList.remove('on');await loadUrls();render()}
+$('#evsel').onchange=e=>{const v=e.target.value;if(v=='__new'){const n=(prompt('Name of the new event')||'').trim();if(!n){renderEv();return}const ev={id:uid(),name:n,data:blank()};R.events.push(ev);switchEv(ev.id)}else switchEv(v)};
+$('#evm').onclick=()=>$('#evp').classList.toggle('on');
+$('#evr').onclick=()=>{$('#evp').classList.remove('on');const n=(prompt('Event name',curEv().name)||'').trim();if(n){curEv().name=n;persist();renderEv()}};
+$('#evd').onclick=async()=>{$('#evp').classList.remove('on');if(R.events.length<2)return toast('Keep at least one event');const ev=curEv();if(!confirm('Delete \u201C'+ev.name+'\u201D and everything in it?'))return;for(const d of ev.data.docs)await idb('del',d.id);R.events=R.events.filter(x=>x.id!=ev.id);switchEv(R.events[0].id)};
 function renderBar(){const f=D.docs.filter(x=>x.fav);$('#fbar').innerHTML=f.map(x=>`<button data-fb="${x.id}">★ ${esc(x.name)}</button>`).join('');document.body.classList.toggle('hf',f.length>0)}
 $('#fbar').onclick=e=>{const b=e.target.closest('[data-fb]');if(!b)return;const d=D.docs.find(x=>x.id==b.dataset.fb);if(d)viewDoc(d)};
 function renderFav(){const f=D.docs.filter(x=>x.fav);$('#vfav').innerHTML=f.map(x=>`<button data-fv="${x.id}" class="${curDoc&&curDoc.id==x.id?'p':''}">★ ${esc(x.name)}</button>`).join('')}
@@ -386,23 +403,23 @@ function rPeople(){
 function rSet(){
  $('#app').innerHTML=`<h1>Settings</h1><div class="card"><h2>Backup</h2><p class="mut">Saves your documents, checklists and notes in one file. Do this before clearing your browser data or switching phones.</p>
  <div class="row"><button class="p" id="ex" style="flex:1">Export backup</button><label class="bt" for="imp" style="flex:1">Import backup</label></div></div>
- <div class="card"><h2>Stored here</h2><p class="mut">${D.docs.length} documents, ${D.lists.length} checklists, ${D.notes.length} notes, ${D.people.length} people, ${D.apps.length} app buttons. Everything stays on this device.</p></div>
- <div class="card"><h2>Erase data</h2><p class="mut">Removes all documents, checklists, notes and people from this device. Export a backup first.</p><button class="d" id="er">Erase everything</button></div>`;
- $('#er').onclick=async()=>{if(!confirm('Erase all documents, checklists, notes and people from this device?'))return;if(!confirm('This cannot be undone without a backup. Erase now?'))return;for(const d of D.docs)await idb('del',d.id);for(const k in urls)delete urls[k];D={docs:[],lists:[],notes:[],people:[],apps:[]};resetHist();save();render();toast('Everything erased')};
+ <div class="card"><h2>Stored here</h2><p class="mut">This event: ${D.docs.length} documents, ${D.lists.length} checklists, ${D.notes.length} notes, ${D.people.length} people, ${D.apps.length} app buttons. Everything stays on this device.</p></div>
+ <div class="card"><h2>Erase this event</h2><p class="mut">Empties the current event only. Your other events are not touched. Export a backup first.</p><button class="d" id="er">Erase this event\u2019s data</button></div>`;
+ $('#er').onclick=async()=>{if(!confirm('Erase all documents, checklists, notes, people and app buttons in this event?'))return;if(!confirm('This cannot be undone without a backup. Erase now?'))return;for(const d of D.docs)await idb('del',d.id);for(const k in urls)delete urls[k];Object.assign(D,blank());resetHist();persist();render();toast('This event was erased')};
  $('#ex').onclick=async()=>{
-  try{const files={};for(const d of D.docs){const b=await idb('get',d.id);if(b)files[d.id]=await new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b)})}
-  const blob=new Blob([JSON.stringify({v:1,data:D,files})],{type:'application/json'});
+  try{const files={};for(const d of R.events.flatMap(e=>e.data.docs)){const b=await idb('get',d.id);if(b)files[d.id]=await new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b)})}
+  const blob=new Blob([JSON.stringify({v:2,R,files})],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='oversight-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();toast('Backup file created')}catch(e){toast('Backup failed')}};
 }
 $('#imp').onchange=async e=>{
  const f=e.target.files[0];e.target.value='';if(!f)return;
- try{const j=JSON.parse(await f.text());if(!j.data)throw 0;
+ try{const j=JSON.parse(await f.text());const nr=j.R||(j.data?{cur:'e1',events:[{id:'e1',name:'Event 1',data:j.data}]}:null);if(!nr||!Array.isArray(nr.events)||!nr.events.length)throw 0;
   if(!confirm('Replace everything on this device with the backup?'))return;
-  for(const d of D.docs)await idb('del',d.id);
+  for(const d of R.events.flatMap(e=>e.data.docs))await idb('del',d.id);
   for(const id in urls)delete urls[id];
   for(const id in j.files||{}){const b=await (await fetch(j.files[id])).blob();await idb('put',id,b)}
-  D=Object.assign({docs:[],lists:[],notes:[],people:[],apps:[]},j.data);resetHist();save();await loadUrls();render();toast('Backup restored')}catch(x){toast('That file is not a valid backup')}};
+  R=nr;R.events.forEach(evData);D=curEv().data;R.cur=curEv().id;resetHist();persist();await loadUrls();render();toast('Backup restored')}catch(x){toast('That file is not a valid backup')}};
 render();loadUrls();
-idb('keys').then(ks=>(ks||[]).forEach(k=>{if(!D.docs.some(d=>d.id==k))idb('del',k)})).catch(()=>{});
+idb('keys').then(ks=>(ks||[]).forEach(k=>{if(!R.events.some(e=>e.data.docs.some(d=>d.id==k)))idb('del',k)})).catch(()=>{});
 if('serviceWorker' in navigator&&location.protocol.indexOf('http')==0)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script></body></html>
